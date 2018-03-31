@@ -140,7 +140,7 @@ BUGS:
       		edgeCam.position.set(20,20,10);
 
 			//addBalls();
-			//addHealthBalls();
+			addHealthBalls();
 			//addDeathBalls();
 
 
@@ -384,6 +384,17 @@ BUGS:
 		let tmp = new Physijs.SphereMesh( geometry, pmaterial );
 		tmp.setDamping(0.1,0.1);
 		tmp.castShadow = true;
+		if (i > 3) {
+			tmp.addEventListener( 'collision',
+				function( other_object, relative_velocity, relative_rotation, contact_normal ) {
+					if (other_object== node){
+						console.log("hit the tail!");
+						node.__dirtyPosition = true;
+					  gameState.scene = 'youlose';
+					}
+				}
+			);
+		}
 		if (i == 0) {
 			node = tmp;
 			nodeCam.position.set(0,4,5);
@@ -393,19 +404,11 @@ BUGS:
 			node.add(nodeCam);
 			node.add(upperCam);
 
-			node.translateY(10);
+			//node.translateY(10);
 
 			nodeCam.translateY(-4);
 			nodeCam.translateZ(3);
 			head = new Physijs.SphereMesh( geometry, pmaterial );
-			head.addEventListener( 'collision',
-				function( other_object, relative_velocity, relative_rotation, contact_normal ) {
-					if (nodes.includes(other_object)){
-						;// when it hits itself
-					}
-					console.log('collision!');
-				}
-			);
 			head.position.set(0,0,3);
 			node.add(head);
 		}
@@ -457,13 +460,13 @@ BUGS:
 					nodes[i].setLinearVelocity(
 						new THREE.Vector3(index[i - 1].x - nodes[i].position.x,
 															0,
-															index[i - 1].z - nodes[i].position.z).normalize().multiplyScalar(controls.speed * 0.92));
+															index[i - 1].z - nodes[i].position.z).normalize().multiplyScalar(controls.speed * 0.9));
 
 			} else {
 				nodes[i].setLinearVelocity(
 					new THREE.Vector3(index[i - 1].x - nodes[i].position.x,
 														0,
-														index[i - 1].z - nodes[i].position.z).normalize().multiplyScalar(controls.speed * 1.05));
+														index[i - 1].z - nodes[i].position.z).normalize().multiplyScalar(controls.speed * 1.1));
 
 			}
 
@@ -549,6 +552,8 @@ BUGS:
 		if (gameState.scene == 'youlose' && event.key=='r') {
 			gameState.scene = 'main';
 			scene = initScene();
+			index = [];
+			nodes = [];
 			createMainScene();
 			gameState.health = 10;
 			gameState.score =0;
@@ -677,11 +682,12 @@ BUGS:
 
   function updatenode() {
 		"change the node's linear or angular velocity based on controls state (set by WSAD key presses)"
-
+		console.log("updated!");
 		var forward = node.getWorldDirection();
 
 		if (controls.fwd){
 			node.setLinearVelocity(forward.multiplyScalar(controls.speed));
+			console.log("Reached! "+controls.speed + " " + forward);
 		} else if (controls.bwd){
 			node.setLinearVelocity(forward.multiplyScalar(-controls.speed));
 		} else {
@@ -738,6 +744,7 @@ BUGS:
 				break;
 
 			case "main":
+
 				updatenode();
 				updateS();
 				//upadateGoldenSnitch();
