@@ -4,14 +4,14 @@ Members: Daniel Johnston, Benedikt Reynolds, Rebecca Panitch,
 		Marcus Lee, Zepeng Hu
 PA02: Work with your team to modify the game0 demo from class and
 		make the following changes:
-				- Add key controls "Q" and "E" to rotate the avatar camera view to the
+				- Add key controls "Q" and "E" to rotate the node camera view to the
 					left and right, respectively
-				-	Replace the box avatar with a Monkey avatar
-				- Create a NonPlayableCharacter which moves toward the avatar if
-					the avatar gets too close
-				- When the NPC hits the Avatar, the avatar should lose a point of health
+				-	Replace the box node with a Monkey node
+				- Create a NonPlayableCharacter which moves toward the node if
+					the node gets too close
+				- When the NPC hits the node, the node should lose a point of health
 					and the NPC should be teleported to a random positiion on the board
-				- When the Avatar reaches zero health, the game should go to a "you lose"
+				- When the node reaches zero health, the game should go to a "you lose"
 					scene, which the player can restart with the "R" key
 				- Add a start screen, where the user can initatie play by hitting the "P"
 					key
@@ -21,20 +21,23 @@ BUGS:
 */
 
 	var scene, renderer;  // all threejs programs need these
-	var camera, avatarCam, edgeCam, upperCam;  // we have two cameras in the main scene
-	var avatar;
+	var camera, nodeCam, edgeCam, upperCam;  // we have two cameras in the main scene
+	var node;
+	var index = [];
+	var nodes = [];
+	var head;
 
 	// here are some mesh objects ...
-	var cone;
-	var torus;
-	var npc;
-	var goldenSnitch; //actually hot pink
+	//var cone;
+	//var torus;
+	//var npc;
+	//var goldenSnitch; //actually hot pink
 
 	var endScene, endCamera, endText;
 	var loseScene, startScene;
 
 	var controls =
-	     {fwd:false, bwd:false, left:false, right:false,
+	     {fwd:true, bwd:false, left:false, right:false,
 				speed:10, fly:false, reset:false, rleft:false,
 				rright:false, start:false, hit:false, npc:false, goldenSnitch:false,
 		    camera:camera}
@@ -127,22 +130,20 @@ BUGS:
 			var skybox = createSkyBox('sky.jpg',1);
 			scene.add(skybox);
 
-			// create the avatar
-			avatarCam = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1000 );
+			// create the node
+			nodeCam = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1000 );
 			upperCam = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.1, 1000 );
-			avatar = createAvatar();
-			gameState.camera = avatarCam;
+			createS();
+			gameState.camera = nodeCam;
 
       		edgeCam = new THREE.PerspectiveCamera( 120, window.innerWidth / window.innerHeight, 0.1, 1000 );
       		edgeCam.position.set(20,20,10);
 
-			addBalls();
-			addHealthBalls();
-			addDeathBalls();
+			//addBalls();
+			//addHealthBalls();
+			//addDeathBalls();
 
-			cone = createConeMesh(4,6);
-			cone.position.set(10,3,7);
-			scene.add(cone);
+
 
 			torus = createTorus();
 			torus.position.set(0,0,0);
@@ -154,15 +155,15 @@ BUGS:
 			torus.rotation.set(0,45,0);
 			scene.add(torus);
 
-			npc = createBoxMesh2(0x0000ff,1,2,4);
-			npc.position.set(30,5,-30);
-			scene.add(npc);
+			//npc = createBoxMesh2(0x0000ff,1,2,4);
+			//npc.position.set(30,5,-30);
+			//scene.add(npc);
 			//console.dir(npc);
 			//playGameMusic();
 
-			goldenSnitch = createSphereMesh();
-			goldenSnitch.position.set(16, 5, -30);
-			scene.add(goldenSnitch);
+			//goldenSnitch = createSphereMesh();
+			//goldenSnitch.position.set(16, 5, -30);
+			//scene.add(goldenSnitch);
 	}
 
 	function randN(n) {
@@ -198,7 +199,7 @@ BUGS:
 	}
 
 	function addHealthBalls() {
-		//creates spheres that increase health of avatar when they collide with avatar
+		//creates spheres that increase health of node when they collide with node
 		var numBalls = 2;
 
 		for(i=0;i<numBalls;i++) {
@@ -208,8 +209,8 @@ BUGS:
 
 			ball.addEventListener( 'collision',
 				function( other_object, relative_velocity, relative_rotation, contact_normal ) {
-					if (other_object==avatar){
-						console.log("avatar hit health ball (+1 health!)");
+					if (other_object==node){
+						console.log("node hit health ball (+1 health!)");
 						soundEffect('good.wav');
 						gameState.health += 1;  // add one to the score
 						//drop below scene
@@ -222,7 +223,7 @@ BUGS:
 	}
 
 	function addDeathBalls() {
-		//creates spheres that increase health of avatar when they collide with avatar
+		//creates spheres that increase health of node when they collide with node
 		var numBalls = 2;
 
 		for(i=0;i<numBalls;i++) {
@@ -232,8 +233,8 @@ BUGS:
 
 			ball.addEventListener( 'collision',
 				function( other_object, relative_velocity, relative_rotation, contact_normal ) {
-					if (other_object==avatar){
-						console.log("avatar hit death ball (you lose!)");
+					if (other_object==node){
+						console.log("node hit death ball (you lose!)");
 						soundEffect('bad.wav');
 						if(gameState.health>5){
 							gameState.health -=5;
@@ -376,48 +377,92 @@ BUGS:
 		// we need to rotate the mesh 90 degrees to make it horizontal not vertical
 	}
 
-	function createAvatar() {
-		var loader = new THREE.JSONLoader();
-		loader.load("../models/suzanne.json",
-					function ( geometry, materials ) {
-						console.log("loading suzanne");
-						var material = new THREE.MeshLambertMaterial( { color: 0x00ff00 } );
-						var pmaterial = new Physijs.createMaterial(material,0.9,0.5);
-						avatar = new Physijs.BoxMesh( geometry, pmaterial );
-						avatar.setDamping(0.1,0.1);
-						avatar.castShadow = true;
+	function createnode(i) {
+		var material = new THREE.MeshLambertMaterial( { color: 0x00ff00 } );
+		var pmaterial = new Physijs.createMaterial(material,0.9,0.5);
+		var geometry = new THREE.SphereGeometry(1,10,10);
+		let tmp = new Physijs.SphereMesh( geometry, pmaterial );
+		tmp.setDamping(0.1,0.1);
+		tmp.castShadow = true;
+		if (i == 0) {
+			node = tmp;
+			nodeCam.position.set(0,4,5);
+			nodeCam.lookAt(0,4,10);
+			upperCam.position.set(0,6,-6);
+			upperCam.lookAt(0,4,16);
+			node.add(nodeCam);
+			node.add(upperCam);
 
-						avatarCam.position.set(0,4,0);
-						avatarCam.lookAt(0,4,10);
-						upperCam.position.set(0,6,-6);
-						upperCam.lookAt(0,4,16);
-						avatar.add(avatarCam);
-						avatar.add(upperCam);
+			node.translateY(10);
 
-						avatar.translateY(10);
+			nodeCam.translateY(-4);
+			nodeCam.translateZ(3);
+			head = new Physijs.BoxMesh( geometry, pmaterial );
+			head.addEventListener( 'collision',
+				function( other_object, relative_velocity, relative_rotation, contact_normal ) {
+					if (nodes.includes(other_object)){
+						;// when it hits itself
+					}
+				}
+			);
+			head.position.set(0,0,3);
+			node.add(head);
+		}
 
-						avatarCam.translateY(-4);
-						avatarCam.translateZ(3);
-						scene.add(avatar);
-						return avatar;
-					},
-					function(xhr){
-						console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );},
-					function(err){console.log("error in loading: "+err);}
-				)
+
+		return tmp;
 	}
 
-	function createConeMesh(r,h) {
-		var geometry = new THREE.ConeGeometry( r, h, 32);
-		var texture = new THREE.TextureLoader().load( '../images/tile.jpg' );
-		texture.wrapS = THREE.RepeatWrapping;
-		texture.wrapT = THREE.RepeatWrapping;
-		texture.repeat.set( 1, 1 );
-		var material = new THREE.MeshLambertMaterial( { color: 0xffffff,  map: texture ,side:THREE.DoubleSide} );
-		var pmaterial = new Physijs.createMaterial(material,0.9,0.5);
-		var mesh = new Physijs.ConeMesh( geometry, pmaterial, 0 );
-		mesh.castShadow = true;
-		return mesh;
+	function createS() {
+		for (i = 0; i < 15; i++) {
+			let tmp = createnode(i);
+			tmp.position.set(0,1,-2.25*i);
+			scene.add(tmp);
+			index.push({x: tmp.position.x,
+			y:tmp.position.y,
+			z:tmp.position.z});
+			nodes.push(tmp);
+		}
+	}
+	function updateS() {
+		for (i = nodes.length - 1; i > 0; i--) {
+			if (Math.sqrt(Math.pow((nodes[i].position.x - index[i - 1].x),2) +
+				Math.pow((nodes[i].position.y - index[i - 1].y),2) +
+				+ Math.pow((nodes[i].position.z - index[i - 1].z),2)) < 1.4) {
+				if (i != 1) {
+					index[i] = {
+						x: nodes[i].position.x,
+						y: nodes[i].position.y,
+						z: nodes[i].position.z,
+					};
+			  } else {
+					index[1] = {
+						x: nodes[1].position.x,
+						y: nodes[1].position.y,
+						z: nodes[1].position.z,
+					};
+					index[0] = {
+						x: node.position.x,
+						y: node.position.y,
+						z: node.position.z,
+					}
+				}
+			} else {
+				if (Math.sqrt(Math.pow((nodes[i].position.x - nodes[i - 1].x),2) +
+					Math.pow((nodes[i].position.y - nodes[i - 1].y),2) +
+					+ Math.pow((nodes[i].position.z - nodes[i - 1].z),2)) < 2.25) {
+						nodes[i].setLinearVelocity(
+							new THREE.Vector3(index[i - 1].x - nodes[i].position.x,
+																0,
+																index[i - 1].z - nodes[i].position.z).normalize().multiplyScalar(controls.speed * 0.9));
+				} else {
+					nodes[i].setLinearVelocity(
+						new THREE.Vector3(index[i - 1].x - nodes[i].position.x,
+															0,
+															index[i - 1].z - nodes[i].position.z).normalize().multiplyScalar(controls.speed));
+				}
+			}
+		}
 	}
 
 	function createSphereMesh() {
@@ -491,9 +536,9 @@ BUGS:
 			gameState.scene = 'main';
 			gameState.score = 0;
 			gameState.health = 10;
-			addBalls();
-			addHealthBalls();
-			addDeathBalls();
+			//addBalls();
+			//addHealthBalls();
+			//addDeathBalls();
 			return;
 		}
 		if (gameState.scene == 'youlose' && event.key=='r') {
@@ -507,19 +552,17 @@ BUGS:
 
 		// this is the regular scene
 		switch (event.key) {
-			// change the way the avatar is moving
-			case "w": controls.fwd = true;  break;
+			// change the way the node is moving
+			//case "w": controls.fwd = true;  break;
 			case "s": controls.bwd = true; break;
 			case "a": controls.left = true; break;
 			case "d": controls.right = true; break;
-			case "r": avatar.rotation.set(0,0,0); avatar.__dirtyRotation=true;
-				console.dir(avatar.rotation); break;
+			case "r": node.rotation.set(0,0,0); node.__dirtyRotation=true;
+				console.dir(node.rotation); break;
 			case "f": controls.down = true; break;
 			case "m": controls.speed = 30; break;
-      		case " ": controls.fly = true;
-          		console.log("space!!");
-          		break;
-      		case "h": controls.reset = true; break;
+      case " ": controls.fly = true; break;
+      case "h": controls.reset = true; break;
 
 			case "q": controls.rleft = true; break;
 			case "e": controls.rright = true; break;
@@ -529,15 +572,15 @@ BUGS:
 
 			// switch cameras
 			case "1": gameState.camera = camera; break;
-			case "2": gameState.camera = avatarCam; break;
-      	case "3": gameState.camera = edgeCam; break;
+			case "2": gameState.camera = nodeCam; break;
+      case "3": gameState.camera = edgeCam; break;
 			case "4": gameState.camera = upperCam; break;
 
-			// move the camera around, relative to the avatar
-			case "ArrowLeft": avatarCam.translateY(1);break;
-			case "ArrowRight": avatarCam.translateY(-1);break;
-			case "ArrowUp": avatarCam.translateZ(-1);break;
-			case "ArrowDown": avatarCam.translateZ(1);break;
+			// move the camera around, relative to the node
+			case "ArrowLeft": nodeCam.translateY(1);break;
+			case "ArrowRight": nodeCam.translateY(-1);break;
+			case "ArrowUp": nodeCam.translateZ(-1);break;
+			case "ArrowDown": nodeCam.translateZ(1);break;
 		}
 	}
 
@@ -545,27 +588,27 @@ BUGS:
 		//console.log("Keydown:"+event.key);
 		//console.dir(event);
 		switch (event.key) {
-			case "w": controls.fwd   = false;  break;
+			//case "w": controls.fwd   = false;  break;
 			case "s": controls.bwd   = false; break;
 			case "a": controls.left  = false; break;
 			case "d": controls.right = false; break;
 			case "r": controls.up    = false; break;
 			case "f": controls.down  = false; break;
 			case "m": controls.speed = 10; break;
-      		case " ": controls.fly = false; break;
-      		case "h": controls.reset = false; break;
+      case " ": controls.fly = false; break;
+      case "h": controls.reset = false; break;
 			case "q": controls.rleft = false; break;
 			case "e": controls.rright = false; break;
 		}
 	}
 
-	function updateNPC() {
-		npc.lookAt(avatar.position);
+	/*function updateNPC() {
+		npc.lookAt(node.position);
 	  //npc.__dirtyPosition = true;
 
 		npc.addEventListener( 'collision',
 			function( other_object, relative_velocity, relative_rotation, contact_normal ) {
-				if (other_object == avatar){
+				if (other_object == node){
 					controls.hit = true;  // add one to the score
 					if (gameState.health == 1) {
 						gameState.scene='youlose';
@@ -580,7 +623,7 @@ BUGS:
 			}
 		)
 
-		var dis = Math.sqrt(Math.pow((avatar.position.x - npc.position.x),2) + Math.pow((avatar.position.y - npc.position.y),2) + Math.pow((avatar.position.z - npc.position.z),2));
+		var dis = Math.sqrt(Math.pow((node.position.x - npc.position.x),2) + Math.pow((node.position.y - npc.position.y),2) + Math.pow((node.position.z - npc.position.z),2));
 		if (dis <= 20) {
 			npc.setLinearVelocity(npc.getWorldDirection().multiplyScalar(5));
 		}
@@ -590,14 +633,14 @@ BUGS:
       		npc.position.set(randN(30),5,randN(30));
 			npc.setLinearVelocity(npc.getWorldDirection().multiplyScalar(0));
 		}
-	}
+	}*/
 
-	function upadateGoldenSnitch() {
-	  goldenSnitch.lookAt(avatar.position);
+	/*function upadateGoldenSnitch() {
+	  goldenSnitch.lookAt(node.position);
 
 	  goldenSnitch.addEventListener( 'collision',
 	    function( other_object, relative_velocity, relative_rotation, contact_normal ) {
-	      if (other_object == avatar){
+	      if (other_object == node){
 	        controls.hit = true;
 	        gameState.scene = 'youwon';
 
@@ -610,7 +653,7 @@ BUGS:
 	    }
 	  )
 
-	  var dis = Math.sqrt(Math.pow((avatar.position.x - goldenSnitch.position.x),2) + Math.pow((avatar.position.y - goldenSnitch.position.y),2) + Math.pow((avatar.position.z - goldenSnitch.position.z),2));
+	  var dis = Math.sqrt(Math.pow((node.position.x - goldenSnitch.position.x),2) + Math.pow((node.position.y - goldenSnitch.position.y),2) + Math.pow((node.position.z - goldenSnitch.position.z),2));
 	  if (dis <= 20) {
 			goldenSnitch.setLinearVelocity(goldenSnitch.getWorldDirection().multiplyScalar(-5));
 			if(randN(30)<10){
@@ -625,49 +668,50 @@ BUGS:
 	        goldenSnitch.position.set(randN(30),5,randN(30));
 	    goldenSnitch.setLinearVelocity(goldenSnitch.getWorldDirection().multiplyScalar(0));
 	  }
-	}
+	}*/
 
-  function updateAvatar() {
-		"change the avatar's linear or angular velocity based on controls state (set by WSAD key presses)"
+  function updatenode() {
+		"change the node's linear or angular velocity based on controls state (set by WSAD key presses)"
 
-		var forward = avatar.getWorldDirection();
+		var forward = node.getWorldDirection();
 
 		if (controls.fwd){
-			avatar.setLinearVelocity(forward.multiplyScalar(controls.speed));
+			node.setLinearVelocity(forward.multiplyScalar(controls.speed));
 		} else if (controls.bwd){
-			avatar.setLinearVelocity(forward.multiplyScalar(-controls.speed));
+			node.setLinearVelocity(forward.multiplyScalar(-controls.speed));
 		} else {
-			var velocity = avatar.getLinearVelocity();
+			var velocity = node.getLinearVelocity();
 			velocity.x=velocity.z=0;
-			avatar.setLinearVelocity(velocity); //stop the xz motion
+			node.setLinearVelocity(velocity); //stop the xz motion
 		}
 
     if (controls.fly){
-      avatar.setLinearVelocity(new THREE.Vector3(0,controls.speed,0));
+      node.setLinearVelocity(new THREE.Vector3(0,controls.speed,0));
     }
 
 		if (controls.left){
-			avatar.setAngularVelocity(new THREE.Vector3(0,controls.speed*0.1,0));
+			node.setAngularVelocity(new THREE.Vector3(0,controls.speed*0.2,0));
 		} else if (controls.right){
-			avatar.setAngularVelocity(new THREE.Vector3(0,-controls.speed*0.1,0));
+			node.setAngularVelocity(new THREE.Vector3(0,-controls.speed*0.2,0));
 		}
 
 		if (controls.rleft) {
-			avatarCam.rotateY(0.01);
+			nodeCam.rotateY(0.01);
 		}
 		if (controls.rright) {
-			avatarCam.rotateY(-0.01);
+			nodeCam.rotateY(-0.01);
 		}
+		node.position.y = 1;
 
-		if (controls.hit) {
+		/*if (controls.hit) {
 			gameState.health--;
 			controls.hit = false;
 		}
 
     if (controls.reset){
-      avatar.__dirtyPosition = true;
-      avatar.position.set(40,10,40);
-    }
+      node.__dirtyPosition = true;
+      node.position.set(40,10,40);
+    }*/
 	}
 
 	function animate() {
@@ -689,11 +733,12 @@ BUGS:
 				break;
 
 			case "main":
-				updateAvatar();
-				upadateGoldenSnitch();
-				updateNPC();
-        		edgeCam.lookAt(avatar.position);
-	    		scene.simulate();
+				updatenode();
+				updateS();
+				//upadateGoldenSnitch();
+				//updateNPC();
+        edgeCam.lookAt(node.position);
+	    	scene.simulate();
 				if (gameState.camera!= 'none'){
 					renderer.render( scene, gameState.camera );
 				}
