@@ -397,12 +397,13 @@ BUGS:
 
 			nodeCam.translateY(-4);
 			nodeCam.translateZ(3);
-			head = new Physijs.BoxMesh( geometry, pmaterial );
+			head = new Physijs.SphereMesh( geometry, pmaterial );
 			head.addEventListener( 'collision',
 				function( other_object, relative_velocity, relative_rotation, contact_normal ) {
 					if (nodes.includes(other_object)){
 						;// when it hits itself
 					}
+					console.log('collision!');
 				}
 			);
 			head.position.set(0,0,3);
@@ -425,10 +426,12 @@ BUGS:
 		}
 	}
 	function updateS() {
+		let change = false;
 		for (i = nodes.length - 1; i > 0; i--) {
 			if (Math.sqrt(Math.pow((nodes[i].position.x - index[i - 1].x),2) +
 				Math.pow((nodes[i].position.y - index[i - 1].y),2) +
-				+ Math.pow((nodes[i].position.z - index[i - 1].z),2)) < 1.4) {
+				+ Math.pow((nodes[i].position.z - index[i - 1].z),2)) < 1.3 || change) {
+					change = true;
 				if (i != 1) {
 					index[i] = {
 						x: nodes[i].position.x,
@@ -447,21 +450,23 @@ BUGS:
 						z: node.position.z,
 					}
 				}
-			} else {
-				if (Math.sqrt(Math.pow((nodes[i].position.x - nodes[i - 1].x),2) +
-					Math.pow((nodes[i].position.y - nodes[i - 1].y),2) +
-					+ Math.pow((nodes[i].position.z - nodes[i - 1].z),2)) < 2.25) {
-						nodes[i].setLinearVelocity(
-							new THREE.Vector3(index[i - 1].x - nodes[i].position.x,
-																0,
-																index[i - 1].z - nodes[i].position.z).normalize().multiplyScalar(controls.speed * 0.9));
-				} else {
+			}
+			if (Math.sqrt(Math.pow((nodes[i].position.x - nodes[i - 1].position.x),2) +
+				Math.pow((nodes[i].position.y - nodes[i - 1].position.y),2) +
+				+ Math.pow((nodes[i].position.z - nodes[i - 1].position.z),2)) < 2.2) {
 					nodes[i].setLinearVelocity(
 						new THREE.Vector3(index[i - 1].x - nodes[i].position.x,
 															0,
-															index[i - 1].z - nodes[i].position.z).normalize().multiplyScalar(controls.speed));
-				}
+															index[i - 1].z - nodes[i].position.z).normalize().multiplyScalar(controls.speed * 0.92));
+
+			} else {
+				nodes[i].setLinearVelocity(
+					new THREE.Vector3(index[i - 1].x - nodes[i].position.x,
+														0,
+														index[i - 1].z - nodes[i].position.z).normalize().multiplyScalar(controls.speed * 1.05));
+
 			}
+
 		}
 	}
 
