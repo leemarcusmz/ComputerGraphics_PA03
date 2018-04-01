@@ -34,7 +34,7 @@ BUGS:
 	//var goldenSnitch; //actually hot pink
 
 	var endScene, endCamera, endText;
-	var loseScene, startScene;
+	var loseScene, startScene, midScene;
 
 	var controls =
 	     {fwd:true, bwd:false, left:false, right:false,
@@ -43,7 +43,7 @@ BUGS:
 		    camera:camera}
 
 	var gameState =
-	     {score:0, health:10, scene:'start', camera:'none' }
+	     {score:0, health:10, lives:3, scene:'start', camera:'none' }
 
 	// Here is the main game control
   init(); //
@@ -59,6 +59,19 @@ BUGS:
 		var light1 = createPointLight();
 		light1.position.set(0,200,20);
 		startScene.add(light1);
+		endCamera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.1, 1000 );
+		endCamera.position.set(0,50,1);
+		endCamera.lookAt(0,0,0);
+	}
+	function createMidScene(){
+		midScene = initScene();
+		endText = createSkyBox('wood.jpg',10);
+
+		//endText.rotateX(Math.PI);
+		midScene.add(endText);
+		var light1 = createPointLight();
+		light1.position.set(0,200,20);
+		midScene.add(light1);
 		endCamera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.1, 1000 );
 		endCamera.position.set(0,50,1);
 		endCamera.lookAt(0,0,0);
@@ -106,6 +119,7 @@ BUGS:
 			scene = initScene();
 			createEndScene();
 			createLoseScene();
+			createMidScene();
 			createStartScene();
 			initRenderer();
 			createMainScene();
@@ -390,7 +404,11 @@ BUGS:
 					if (other_object== node){
 						console.log("hit the tail!");
 						node.__dirtyPosition = true;
-					  gameState.scene = 'youlose';
+						gameState.scene = 'lifelost'
+						gameState.lives -=1; 
+						if (gameState.lives==0){
+							gameState.scene = 'youlose';
+						}
 					}
 				}
 			);
@@ -544,6 +562,7 @@ BUGS:
 		if (gameState.scene == 'youwon' && event.key=='r') {
 			gameState.scene = 'main';
 			gameState.score = 0;
+			gameState.lives = 3;
 			gameState.health = 10;
 			//addBalls();
 			//addHealthBalls();
@@ -557,8 +576,18 @@ BUGS:
 			nodes = [];
 			createMainScene();
 			gameState.health = 10;
+			gameState.lives = 3;
 			gameState.score = 0;
 			return;
+		}
+		if (gameState.scene =='lifelost' && event.key =='c'){
+			gameState.scene = 'main';
+			scene = initScene();
+			index =[];
+			nodes =[];
+			createMainScene();
+			return;
+
 		}
 
 		// this is the regular scene
@@ -606,80 +635,13 @@ BUGS:
 			case "r": controls.up    = false; break;
 			case "f": controls.down  = false; break;
 			case "m": controls.speed = 10; break;
-      case " ": controls.fly = false; break;
-      case "h": controls.reset = false; break;
+      		case " ": controls.fly = false; break;
+      		case "h": controls.reset = false; break;
 			case "q": controls.rleft = false; break;
 			case "e": controls.rright = false; break;
 		}
 	}
 
-	/*function updateNPC() {
-		npc.lookAt(node.position);
-	  //npc.__dirtyPosition = true;
-
-		npc.addEventListener( 'collision',
-			function( other_object, relative_velocity, relative_rotation, contact_normal ) {
-				if (other_object == node){
-					controls.hit = true;  // add one to the score
-					if (gameState.health == 1) {
-						gameState.scene='youlose';
-						gameState.health--;
-					}
-					//scene.remove(ball);  // this isn't working ...
-					// make the ball drop below the scene ..
-					// threejs doesn't let us remove it from the schene...
-					controls.npc = true;
-					this.setLinearVelocity(0);
-				}
-			}
-		)
-
-		var dis = Math.sqrt(Math.pow((node.position.x - npc.position.x),2) + Math.pow((node.position.y - npc.position.y),2) + Math.pow((node.position.z - npc.position.z),2));
-		if (dis <= 20) {
-			npc.setLinearVelocity(npc.getWorldDirection().multiplyScalar(5));
-		}
-		if (controls.npc) {
-			controls.npc = false;
-			npc.__dirtyPosition = true;
-      		npc.position.set(randN(30),5,randN(30));
-			npc.setLinearVelocity(npc.getWorldDirection().multiplyScalar(0));
-		}
-	}*/
-
-	/*function upadateGoldenSnitch() {
-	  goldenSnitch.lookAt(node.position);
-
-	  goldenSnitch.addEventListener( 'collision',
-	    function( other_object, relative_velocity, relative_rotation, contact_normal ) {
-	      if (other_object == node){
-	        controls.hit = true;
-	        gameState.scene = 'youwon';
-
-	        //scene.remove(ball);  // this isn't working ...
-	        // make the ball drop below the scene ..
-	        // threejs doesn't let us remove it from the schene...
-	        controls.goldenSnitch = true;
-	        this.setLinearVelocity(0);
-	      }
-	    }
-	  )
-
-	  var dis = Math.sqrt(Math.pow((node.position.x - goldenSnitch.position.x),2) + Math.pow((node.position.y - goldenSnitch.position.y),2) + Math.pow((node.position.z - goldenSnitch.position.z),2));
-	  if (dis <= 20) {
-			goldenSnitch.setLinearVelocity(goldenSnitch.getWorldDirection().multiplyScalar(-5));
-			if(randN(30)<10){
-				goldenSnitch.position.z += 10;
-				goldenSnitch.__dirtyPosition = true;
-			}
-			console.log(randN(30));
-	  }
-	  if (controls.goldenSnitch) {
-	    controls.goldenSnitch = false;
-	    goldenSnitch.__dirtyPosition = true;
-	        goldenSnitch.position.set(randN(30),5,randN(30));
-	    goldenSnitch.setLinearVelocity(goldenSnitch.getWorldDirection().multiplyScalar(0));
-	  }
-	}*/
 
   function updatenode() {
 		"change the node's linear or angular velocity based on controls state (set by WSAD key presses)"
@@ -744,14 +706,16 @@ BUGS:
 				renderer.render( loseScene, endCamera );
 				break;
 
+			case "lifelost": 
+				renderer.render(midScene, endCamera);
+				break;
+
 			case "main":
 
 				updatenode();
 				updateS();
-				//upadateGoldenSnitch();
-				//updateNPC();
-        edgeCam.lookAt(node.position);
-	    	scene.simulate();
+        		edgeCam.lookAt(node.position);
+	    		scene.simulate();
 				if (gameState.camera!= 'none'){
 					renderer.render( scene, gameState.camera );
 				}
@@ -766,7 +730,7 @@ BUGS:
 		  var info = document.getElementById("info");
 			info.innerHTML='<div style="font-size:24pt">Score: '
 	    + gameState.score
-	    + " health="+gameState.health
+	    + " Lives="+gameState.lives
 			+ '     Press p to play'
 	    + '</div>';
 	}
@@ -774,15 +738,23 @@ BUGS:
 		var info = document.getElementById("info");
 			info.innerHTML='<div style="font-size:24pt">Score: '
 	    + gameState.score
-	    + " health="+gameState.health
+	    + " Lives="+gameState.lives
 			+ '     Press r to restart'
+	    + '</div>';
+	}
+	else if(gameState.scene =='lifelost'){
+		var info = document.getElementById("info");
+			info.innerHTML='<div style="font-size:24pt">Score: '
+	    + gameState.score
+	    + " Lives="+gameState.lives
+			+ '     Lost a life. Press c to continue'
 	    + '</div>';
 	}
 	else{
 		var info = document.getElementById("info");
 		info.innerHTML='<div style="font-size:24pt">Score: '
 		+ gameState.score
-		+ " health="+gameState.health
+		+ " Lives="+gameState.lives
 		+ '</div>';
 	}
 }
