@@ -457,10 +457,11 @@ BUGS:
 			if (Math.sqrt(Math.pow((nodes[i].position.x - nodes[i - 1].position.x),2) +
 				Math.pow((nodes[i].position.y - nodes[i - 1].position.y),2) +
 				+ Math.pow((nodes[i].position.z - nodes[i - 1].position.z),2)) < 2.2) {
+					var velocity = nodes[i].getLinearVelocity();
 					nodes[i].setLinearVelocity(
 						new THREE.Vector3(index[i - 1].x - nodes[i].position.x,
 															0,
-															index[i - 1].z - nodes[i].position.z).normalize().multiplyScalar(controls.speed * 0.9));
+															index[i - 1].z - nodes[i].position.z).normalize().multiplyScalar(velocity.length() * 0.88));
 
 			} else {
 				nodes[i].setLinearVelocity(
@@ -556,7 +557,7 @@ BUGS:
 			nodes = [];
 			createMainScene();
 			gameState.health = 10;
-			gameState.score =0;
+			gameState.score = 0;
 			return;
 		}
 
