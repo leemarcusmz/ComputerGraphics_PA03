@@ -154,7 +154,7 @@ BUGS:
       		edgeCam.position.set(20,20,10);
 
 			//addBalls();
-			addHealthBalls();
+			//addHealthBalls();
 			//addDeathBalls();
 
 
