@@ -26,6 +26,7 @@ BUGS:
 	var index = [];
 	var nodes = [];
 	var head;
+	var balls = [];
 
 	// here are some mesh objects ...
 	//var cone;
@@ -135,7 +136,7 @@ BUGS:
 
 			// create main camera
 			camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.1, 1000 );
-			camera.position.set(0,50,0);
+			camera.position.set(0,75,0);
 			camera.lookAt(0,0,0);
 
 			// create the ground and the skybox
@@ -148,7 +149,7 @@ BUGS:
 			nodeCam = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 1000 );
 			upperCam = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 0.1, 1000 );
 			createS();
-			gameState.camera = nodeCam;
+			gameState.camera = camera;
 
       		edgeCam = new THREE.PerspectiveCamera( 120, window.innerWidth / window.innerHeight, 0.1, 1000 );
       		edgeCam.position.set(20,20,10);
@@ -168,6 +169,8 @@ BUGS:
 			torus.position.set(0,0,0);
 			torus.rotation.set(0,45,0);
 			scene.add(torus);
+
+			addBalls();
 
 			//npc = createBoxMesh2(0x0000ff,1,2,4);
 			//npc.position.set(30,5,-30);
@@ -189,77 +192,9 @@ BUGS:
 
 		for(i=0;i<numBalls;i++) {
 			var ball = createBall();
-			ball.position.set(randN(20)+15,30,randN(20)+15);
+			ball.position.set(randN(100)-50,15,randN(100)-50);
 			scene.add(ball);
-
-			ball.addEventListener( 'collision',
-				function( other_object, relative_velocity, relative_rotation, contact_normal ) {
-					if (other_object==cone){
-						console.log("ball "+i+" hit the cone");
-						soundEffect('good.wav');
-						gameState.score += 1;  // add one to the score
-						if (gameState.score == numBalls) {
-							gameState.scene='youwon';
-						}
-            //scene.remove(ball);  // this isn't working ...
-						// make the ball drop below the scene ..
-						// threejs doesn't let us remove it from the schene...
-						this.position.y = this.position.y - 100;
-						this.__dirtyPosition = true;
-					}
-				}
-			)
-		}
-	}
-
-	function addHealthBalls() {
-		//creates spheres that increase health of node when they collide with node
-		var numBalls = 2;
-
-		for(i=0;i<numBalls;i++) {
-			var ball = createHealthBall();
-			ball.position.set(randN(20)+15,30,randN(20)+15);
-			scene.add(ball);
-
-			ball.addEventListener( 'collision',
-				function( other_object, relative_velocity, relative_rotation, contact_normal ) {
-					if (other_object==node){
-						console.log("node hit health ball (+1 health!)");
-						soundEffect('good.wav');
-						gameState.health += 1;  // add one to the score
-						//drop below scene
-						this.position.y = this.position.y - 100;
-						this.__dirtyPosition = true;
-					}
-				}
-			)
-		}
-	}
-
-	function addDeathBalls() {
-		//creates spheres that increase health of node when they collide with node
-		var numBalls = 2;
-
-		for(i=0;i<numBalls;i++) {
-			var ball = createDeathBall();
-			ball.position.set(randN(20)+15,30,randN(20)+15);
-			scene.add(ball);
-
-			ball.addEventListener( 'collision',
-				function( other_object, relative_velocity, relative_rotation, contact_normal ) {
-					if (other_object==node){
-						console.log("node hit death ball (you lose!)");
-						soundEffect('bad.wav');
-						if(gameState.health>5){
-							gameState.health -=5;
-						}
-						else{
-							gameState.health =0;
-							gameState.scene = 'youlose';
-						}
-					}
-				}
-			)
+			balls.push(ball);
 		}
 	}
 
@@ -398,21 +333,32 @@ BUGS:
 		let tmp = new Physijs.SphereMesh( geometry, pmaterial );
 		tmp.setDamping(0.1,0.1);
 		tmp.castShadow = true;
-		if (i > 3) {
-			tmp.addEventListener( 'collision',
-				function( other_object, relative_velocity, relative_rotation, contact_normal ) {
-					if (other_object== node){
-						console.log("hit the tail!");
+		tmp.addEventListener( 'collision',
+			function( other_object, relative_velocity, relative_rotation, contact_normal ) {
+				if(other_object==node){
+					console.log("checkmate");
+					console.log("hit the tail!");
 						node.__dirtyPosition = true;
 						gameState.scene = 'lifelost'
-						gameState.lives -=1; 
+						gameState.lives -=1;
 						if (gameState.lives==0){
 							gameState.scene = 'youlose';
 						}
 					}
+
+				for(var i = 0; i<balls.length; i++){
+					if (other_object==balls[i]){
+						console.log("hit a ball!");
+						scene.remove(balls[i]);
+						node.__dirtyPosition = true;
+						gameState.score ++;
+						if (gameState.score==7){
+							gameState.scene = 'youwon';
+						}
+					}
 				}
-			);
-		}
+			}
+		);
 		if (i == 0) {
 			node = tmp;
 			nodeCam.position.set(0,4,5);
@@ -645,12 +591,10 @@ BUGS:
 
   function updatenode() {
 		"change the node's linear or angular velocity based on controls state (set by WSAD key presses)"
-		console.log("updated!");
 		var forward = node.getWorldDirection();
 
 		if (controls.fwd){
 			node.setLinearVelocity(forward.multiplyScalar(controls.speed));
-			console.log("Reached! "+controls.speed + " " + forward);
 		} else if (controls.bwd){
 			node.setLinearVelocity(forward.multiplyScalar(-controls.speed));
 		} else {
@@ -706,7 +650,7 @@ BUGS:
 				renderer.render( loseScene, endCamera );
 				break;
 
-			case "lifelost": 
+			case "lifelost":
 				renderer.render(midScene, endCamera);
 				break;
 
