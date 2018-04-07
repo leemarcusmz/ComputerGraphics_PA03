@@ -66,8 +66,17 @@ BUGS:
 	}
 	function createMidScene(){
 		midScene = initScene();
-		endText = createSkyBox('wood.jpg',10);
-
+		var geometry = new THREE.PlaneGeometry( 1600, 925, 128 );
+		var texture = new THREE.TextureLoader().load( '../images/hearts.jpg' );
+		texture.wrapS = THREE.RepeatWrapping;
+		texture.wrapT = THREE.RepeatWrapping;
+		texture.repeat.set( 1, 1 );
+		var material = new THREE.MeshLambertMaterial( { color: 0xffffff,  map: texture ,side:THREE.DoubleSide} );
+		var mesh = new THREE.Mesh( geometry, material, 0 );
+		mesh.position.z-=000;
+		mesh.position.y-=400;
+		mesh.rotateX(-Math.PI/2);
+		endText = mesh;
 		//endText.rotateX(Math.PI);
 		midScene.add(endText);
 		var light1 = createPointLight();
