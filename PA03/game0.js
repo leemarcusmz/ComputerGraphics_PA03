@@ -39,7 +39,7 @@ BUGS:
 
 	var controls =
 	     {fwd:true, bwd:false, left:false, right:false,
-				speed:10, fly:false, reset:false, rleft:false,
+				speed:10, reset:false, rleft:false,
 				rright:false, start:false, hit:false, npc:false, goldenSnitch:false,
 		    camera:camera}
 
@@ -519,6 +519,7 @@ BUGS:
 			gameState.score = 0;
 			gameState.lives = 3;
 			gameState.health = 10;
+			controls.speed=20;
 			//addBalls();
 			//addHealthBalls();
 			//addDeathBalls();
@@ -533,6 +534,7 @@ BUGS:
 			gameState.health = 10;
 			gameState.lives = 3;
 			gameState.score = 0;
+			controls.speed=20;
 			return;
 		}
 		if (gameState.scene =='lifelost' && event.key =='c'){
@@ -540,6 +542,7 @@ BUGS:
 			scene = initScene();
 			index =[];
 			nodes =[];
+			controls.speed=20;
 			createMainScene();
 			return;
 
@@ -555,9 +558,11 @@ BUGS:
 			case "r": node.rotation.set(0,0,0); node.__dirtyRotation=true;
 				console.dir(node.rotation); break;
 			case "f": controls.down = true; break;
-			case "m": controls.speed = 30; break;
-      case " ": controls.fly = true; break;
-      case "h": controls.reset = true; break;
+
+			//increase and decrease speed of snake
+			case "m": controls.speed +=10; break;
+			case "n": if (controls.speed >10){ controls.speed-=10}; break;
+      		case "h": controls.reset = true; break;
 
 			case "q": controls.rleft = true; break;
 			case "e": controls.rright = true; break;
@@ -568,7 +573,7 @@ BUGS:
 			// switch cameras
 			case "1": gameState.camera = camera; break;
 			case "2": gameState.camera = nodeCam; break;
-      case "3": gameState.camera = edgeCam; break;
+      		case "3": gameState.camera = edgeCam; break;
 			case "4": gameState.camera = upperCam; break;
 
 			// move the camera around, relative to the node
@@ -589,8 +594,6 @@ BUGS:
 			case "d": controls.right = false; break;
 			case "r": controls.up    = false; break;
 			case "f": controls.down  = false; break;
-			case "m": controls.speed = 10; break;
-      		case " ": controls.fly = false; break;
       		case "h": controls.reset = false; break;
 			case "q": controls.rleft = false; break;
 			case "e": controls.rright = false; break;
@@ -612,9 +615,6 @@ BUGS:
 			node.setLinearVelocity(velocity); //stop the xz motion
 		}
 
-    if (controls.fly){
-      node.setLinearVelocity(new THREE.Vector3(0,controls.speed,0));
-    }
 
 		if (controls.left){
 			node.setAngularVelocity(new THREE.Vector3(0,controls.speed*0.2,0));
