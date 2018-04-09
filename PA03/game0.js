@@ -426,13 +426,13 @@ BUGS:
 					nodes[i].setLinearVelocity(
 						new THREE.Vector3(index[i - 1].x - nodes[i].position.x,
 															0,
-															index[i - 1].z - nodes[i].position.z).normalize().multiplyScalar(velocity.length() * 0.88));
+															index[i - 1].z - nodes[i].position.z).normalize().multiplyScalar(velocity.length() * 0.95));
 
 			} else {
 				nodes[i].setLinearVelocity(
 					new THREE.Vector3(index[i - 1].x - nodes[i].position.x,
 														0,
-														index[i - 1].z - nodes[i].position.z).normalize().multiplyScalar(controls.speed * 1.1));
+														index[i - 1].z - nodes[i].position.z).normalize().multiplyScalar(controls.speed * 1.05));
 
 			}
 
@@ -625,9 +625,9 @@ BUGS:
 
 
 		if (controls.left){
-			node.setAngularVelocity(new THREE.Vector3(0,controls.speed*0.2,0));
+			node.setAngularVelocity(new THREE.Vector3(0,controls.speed*0.18,0));
 		} else if (controls.right){
-			node.setAngularVelocity(new THREE.Vector3(0,-controls.speed*0.2,0));
+			node.setAngularVelocity(new THREE.Vector3(0,-controls.speed*0.18,0));
 		}
 
 		if (controls.rleft) {
