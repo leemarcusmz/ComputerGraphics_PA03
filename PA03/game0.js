@@ -27,6 +27,7 @@ BUGS:
 	var nodes = [];
 	var head;
 	var balls = [];
+	var numBalls = 3;
 
 	// here are some mesh objects ...
 	//var cone;
@@ -197,7 +198,6 @@ BUGS:
 	}
 
 	function addBalls() {
-		var numBalls = 5;
 
 		for(i=0;i<numBalls;i++) {
 			var ball = createBall();
@@ -473,6 +473,11 @@ BUGS:
 					this.position.set(0,-100,0);
 					this.__dirtyPosition = true;
 					gameState.score++;
+					numBalls--;
+					if(numBalls==0){
+						numBalls = 3;
+						addBalls();
+					}
 					if (gameState.score==7){
 						gameState.scene = 'youwon';
 					}
@@ -640,7 +645,6 @@ BUGS:
 			gameState.health--;
 			controls.hit = false;
 		}
-
     if (controls.reset){
       node.__dirtyPosition = true;
       node.position.set(40,10,40);
