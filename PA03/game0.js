@@ -462,7 +462,7 @@ BUGS:
 		var geometry = new THREE.SphereGeometry( 1, 16, 16);
 		var material = new THREE.MeshLambertMaterial( { color: 0xffff00} );
 		var pmaterial = new Physijs.createMaterial(material,0.9,0.95);
-    	var mesh = new Physijs.BoxMesh( geometry, pmaterial );
+    	var mesh = new Physijs.BoxMesh( geometry, pmaterial, 0.01 );
 		mesh.setDamping(0.1,0.1);
 		mesh.castShadow = true;
 		mesh.addEventListener( 'collision',
