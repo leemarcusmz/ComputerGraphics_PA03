@@ -473,11 +473,8 @@ BUGS:
 					this.position.set(0,-100,0);
 					this.__dirtyPosition = true;
 					gameState.score++;
-					numBalls--;
-					if(numBalls==0){
-						numBalls = 3;
-						addBalls();
-					}
+					numBalls = 1;
+					addBalls();
 					if (gameState.score==7){
 						gameState.scene = 'youwon';
 					}
