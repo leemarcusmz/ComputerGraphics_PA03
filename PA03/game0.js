@@ -342,30 +342,22 @@ BUGS:
 		let tmp = new Physijs.SphereMesh( geometry, pmaterial );
 		tmp.setDamping(0.1,0.1);
 		tmp.castShadow = true;
+		if (i > 2)//prevent the second node hit the head; DO NOT DELETE!
 		tmp.addEventListener( 'collision',
 			function( other_object, relative_velocity, relative_rotation, contact_normal ) {
 				if(other_object==node){
 					console.log("checkmate");
-					console.log("hit the tail!");
 						node.__dirtyPosition = true;
 						gameState.scene = 'lifelost'
-						gameState.lives -=1;
+						controls.hit = true;//prvent multiply collison DO NOT DELETE!
+						if (controls.hit) {
+							gameState.lives--;
+							controls.hit = false;
+						}
 						if (gameState.lives==0){
 							gameState.scene = 'youlose';
 						}
 					}
-
-				for(var i = 0; i<balls.length; i++){
-					if (other_object==balls[i]){
-						console.log("hit a ball!");
-						scene.remove(balls[i]);
-						node.__dirtyPosition = true;
-						gameState.score ++;
-						if (gameState.score==7){
-							gameState.scene = 'youwon';
-						}
-					}
-				}
 			}
 		);
 		if (i == 0) {
@@ -467,13 +459,27 @@ BUGS:
 	}
 
 	function createBall() {
-		//var geometry = new THREE.SphereGeometry( 4, 20, 20);
 		var geometry = new THREE.SphereGeometry( 1, 16, 16);
 		var material = new THREE.MeshLambertMaterial( { color: 0xffff00} );
 		var pmaterial = new Physijs.createMaterial(material,0.9,0.95);
     	var mesh = new Physijs.BoxMesh( geometry, pmaterial );
 		mesh.setDamping(0.1,0.1);
 		mesh.castShadow = true;
+		mesh.addEventListener( 'collision',
+			function( other_object, relative_velocity, relative_rotation, contact_normal ) {
+				for (let i = 0; i < nodes.length; i++) {
+					if(other_object==nodes[i]){
+					console.log("hit a ball!");
+					this.position.set(0,-100,0);
+					this.__dirtyPosition = true;
+					gameState.score++;
+					if (gameState.score==7){
+						gameState.scene = 'youwon';
+					}
+				}
+			}
+		}
+		);
 		return mesh;
 	}
 
@@ -560,8 +566,8 @@ BUGS:
 			case "f": controls.down = true; break;
 
 			//increase and decrease speed of snake
-			case "m": controls.speed +=10; break;
-			case "n": if (controls.speed >10){ controls.speed-=10}; break;
+			case "m": controls.speed = 30; break;
+			case "n": if (controls.speed >10){ controls.speed = 10}; break;
       		case "h": controls.reset = true; break;
 
 			case "q": controls.rleft = true; break;
