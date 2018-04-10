@@ -28,6 +28,7 @@ BUGS:
 	var head;
 	var balls = [];
 	var numBalls = 3;
+	var numDoomBalls = 3;
 
 	// here are some mesh objects ...
 	//var cone;
@@ -181,6 +182,7 @@ BUGS:
 			scene.add(torus);
 
 			addBalls();
+			addDoomBalls();
 
 			//npc = createBoxMesh2(0x0000ff,1,2,4);
 			//npc.position.set(30,5,-30);
@@ -206,6 +208,17 @@ BUGS:
 			balls.push(ball);
 		}
 	}
+
+	function addDoomBalls() {
+
+		for(i=0;i<numDoomBalls;i++) {
+			var ball = createDoomBall();
+			ball.position.set(randN(100)-50,15,randN(100)-50);
+			scene.add(ball);
+			balls.push(ball);
+		}
+	}
+
 
 	function playGameMusic() {
 		// create an AudioListener and add it to the camera
@@ -485,24 +498,30 @@ BUGS:
 		return mesh;
 	}
 
-	function createHealthBall() {
-		//var geometry = new THREE.SphereGeometry( 4, 20, 20);
+	function createDoomBall() {
 		var geometry = new THREE.SphereGeometry( 1, 16, 16);
-		var material = new THREE.MeshLambertMaterial( { color: 0x00FF00} );
+		var material = new THREE.MeshLambertMaterial( { color: 0x0000ff} );
 		var pmaterial = new Physijs.createMaterial(material,0.9,0.95);
-    	var mesh = new Physijs.BoxMesh( geometry, material );
+			var mesh = new Physijs.BoxMesh( geometry, pmaterial, 0.01 );
 		mesh.setDamping(0.1,0.1);
 		mesh.castShadow = true;
-		return mesh;
-	}
-
-	function createDeathBall(){
-		var geometry = new THREE.SphereGeometry( 1, 16, 16);
-		var material = new THREE.MeshLambertMaterial( { color: 0xff0000} );
-		var pmaterial = new Physijs.createMaterial(material,0.9,0.95);
-    	var mesh = new Physijs.BoxMesh( geometry, material );
-		mesh.setDamping(0.1,0.1);
-		mesh.castShadow = true;
+		mesh.addEventListener( 'collision',
+			function( other_object, relative_velocity, relative_rotation, contact_normal ) {
+				for (let i = 0; i < nodes.length; i++) {
+					if(other_object==nodes[i]){
+					console.log("checkmate");
+					this.position.set(0,-100,0);
+					this.__dirtyPosition = true;
+					gameState.lives--;
+					gameState.scene = 'lifelost';
+					if (gameState.lives==0){
+						gameState.scene = 'youlose';
+					}
+					addDoomBalls();
+				}
+			}
+		}
+		);
 		return mesh;
 	}
 
